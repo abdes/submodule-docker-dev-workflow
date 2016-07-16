@@ -9,7 +9,7 @@ services:
       - "8529:8529"
     volumes:
       - arangodb-data:/var/lib/arangodb3
-      - arangodb-apps:/var/lib/arangodb-apps3
+      - ./arango/foxx/:/var/lib/arangodb-apps3
 
   server:
     image: node:argon
@@ -46,7 +46,4 @@ services:
 
 volumes:
   arangodb-data:
-    driver: local
-
-  arangodb-apps:
     driver: local
