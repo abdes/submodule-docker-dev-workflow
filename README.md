@@ -681,8 +681,8 @@ arangodb:
   ports:
     - "8529:8529"
   volumes:
-    - arangodb-data:/var/lib/arangodb3
-    - ./arango/foxx/:/var/lib/arangodb-apps3
+    - arangodb-data:/var/lib/arangodb3/
+    - ./arango/foxx/:/var/lib/arangodb3-apps/
 ```
 
 #### server
