@@ -15,11 +15,13 @@ with the full system or just contributing to a specific part.
 	- [Temporarily removing a submodule](#temporarily-removing-a-submodule)
 	- [Permanently removing a submodule](#permanently-removing-a-submodule)
 - [Working with container and submodules](#working-with-container-and-submodules)
-- [Setting up the development environment as a developer](#setting-up-the-development-environment-as-a-developer)
+	- [Setting up the development environment as a developer](#setting-up-the-development-environment-as-a-developer)
 	- [Working independently on a module](#working-independently-on-a-module)
 	- [Getting an update from the submodule’s remote](#getting-an-update-from-the-submodules-remote)
 	- [Making updates to the container](#making-updates-to-the-container)
 	- [Grabbing container updates](#grabbing-container-updates)
+	- [Updating a submodule in-place in the container](#updating-a-submodule-in-place-in-the-container)
+- [Dockerizing everything](#dockerizing-everything)
 
 <!-- /TOC -->
 
@@ -250,7 +252,7 @@ that before.
 
 ## Working with container and submodules
 
-## Setting up the development environment as a developer
+### Setting up the development environment as a developer
 
 To get quickly setup as a developer, you simply need to do the following
 instructions (after ensuring the prerequisites and additional configuration for
@@ -315,6 +317,7 @@ nothing to commit, working directory clean
 ```
 
 ### Working independently on a module
+
 It is perfectly fine to work on a module independently of the development setup.
 We will see later how we can grab the updated made to a submodule from its
 remote and integrate them into the development container.
@@ -478,10 +481,8 @@ $ git commit -am "Moved server submodule to 03d50da"
 $ git push
 ```
 
-
-
-
 ### Making updates to the container
+
 Making changes and committing/pushing them within the container and not the
 submodules is starightforward. It is however recommended to keep such updates
 separate from submodule version changes and updates for the sake of better
@@ -507,11 +508,71 @@ $ git commit -am "Updated README.md"
 $ git push
 ```
 
-
-
-
 ### Grabbing container updates
-Grabbing container updates
-git pull
-git submodule sync --recursive
-git submodule update --init --recursive
+
+When pulling updates from the conatiner repo's remote, **Git auto-fetches, but
+does not auto-update**. The local cache is up-to-date with the submodule’s
+remote, but the submodule’s working directory stays with its former contents.
+Although this auto-fetching is limited to already-known submodules: any new
+ones, not yet copied into local configuration, are not auto-fetched.
+
+> If you don’t explicitly update the submodule’s working directory, your next
+> container commit will regress the submodule. Is is therefore mandatory that
+> you finalize the update.
+
+```shell
+$ git pull
+$ git submodule sync --recursive
+$ git submodule update --init --recursive
+```
+
+### Updating a submodule in-place in the container
+
+This scenario should be limited to the cases where a submodule cannot be
+compiled or tested outside the container. Otherwise it is preferred to modify
+submodules within their independent repos and pull the updates in the container
+afterwards.
+
+Let's update the web submodule to add a simple index.html page.
+
+First, we need to make sure we are starting from a clean start, which means the
+tip of a branch. Let's assume we can add on top of the current submodule master
+branch without breaking the rest of the container and its submodules (if the
+risk of breaking the container happens often, it probably means that embedding
+this code as a submodule was not a good design architectural choice, and it maybe
+more appropriate to just embed its code inline in the container or somewhere else).
+
+```shell
+$ cd web
+$ git checkout master
+$ git pull --rebase
+```
+
+We can now edit the code, test it etc. then perform the **two commits and the
+two necessary pushes** to get the updates to the remote so other developers
+can see them them and grab them.
+```shell
+$ git add index.html
+$ git status -s
+A  index.html
+```
+
+Commit the submodule updates:
+```shell
+$ git commit -am "Added simple index.html"
+```
+
+Commit the container to move the submodule to the new version:
+```shell
+$ cd ..
+$ git commit -am "Moving submodule web to 7ff5ca7"
+```
+
+Finally, push the container and the submodule either in one go with
+`git push --recurse-submodules=on-demand` or by doing two `push` operations,
+one in the submodule and one in the container.
+```shell
+$ git push --recurse-submodules=on-demand
+```
+
+## Dockerizing everything
