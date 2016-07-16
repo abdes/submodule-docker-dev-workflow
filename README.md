@@ -388,19 +388,19 @@ environment will all submodules.
 
 ```shell
 $ git clone --recursive git@localhost:/var/git/example/development-local.git development-local
+
 $ cd development-local
 $ git status
 On branch master
 Your branch is up-to-date with 'origin/master'.
 nothing to commit, working directory clean
 
-$ cd server
-
 $ git submodule status
 3a16594c9272c2c521801bac93d3ac958deca336 arango (heads/master)
 ab2e7566ad972378dd51e98dff74250a4ff58b28 server (ab2e756)
 ab2e7566ad972378dd51e98dff74250a4ff58b28 web (heads/master)
 
+$ cd server
 $ git status
 HEAD detached at ab2e756
 nothing to commit, working directory clean
@@ -478,6 +478,9 @@ $ git commit -am "Moved server submodule to 03d50da"
 $ git push
 ```
 
+
+
+
 ### Making updates to the container
 Making changes and committing/pushing them within the container and not the
 submodules is starightforward. It is however recommended to keep such updates
@@ -499,6 +502,12 @@ Changes not staged for commit:
 	modified:   README.md
 
 no changes added to commit (use "git add" and/or "git commit -a")
+
+$ git commit -am "Updated README.md"
+$ git push
+```
+
+
 
 
 ### Grabbing container updates
