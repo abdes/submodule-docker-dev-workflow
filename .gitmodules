@@ -1,0 +1,9 @@
+[submodule "arango"]
+	path = arango
+	url = git@localhost:/var/git/example/arango.git
+[submodule "server"]
+	path = server
+	url = git@localhost:/var/git/example/server.git
+[submodule "web"]
+	path = web
+	url = git@localhost:/var/git/example/web.git
