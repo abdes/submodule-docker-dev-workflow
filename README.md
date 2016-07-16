@@ -586,4 +586,24 @@ $ git push --recurse-submodules=on-demand
 
 ## Dockerizing everything
 
-TO BE CONTINUED
+> Following are preliminary instructions to get started with docker containers
+> as setup in the docker-compose.yml descriptor.
+> More documentation of the design and structure of the containerization will
+> come later.
+
+All modules are dockerized. To get started with the testing, clone the
+development repo and do this from the development repo root:
+
+```shell
+$ cd server && npm install
+$ docker-compose up
+```
+
+To tear down the docker containers, simply do this from the development
+repo root:
+```shell
+$ docker-compose down
+```
+
+
+> TO BE CONTINUED
