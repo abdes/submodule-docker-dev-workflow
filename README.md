@@ -5,16 +5,11 @@ efficiency no matter whether the developer is (remote, together with the dev
 team), and the experience she/he has with the system(familiar with the full
 system or just contributing to a specific part).
 
-## Credits
-
-* The original idea by Amine Mouafik [Efficient development workflow using Git submodules and Docker Compose](https://www.airpair.com/docker/posts/efficiant-development-workfow-using-git-submodules-and-docker-compose).
-* The excellent [git documentation](https://git-scm.com/doc)
-* [Mastering Git submodules](https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407#.s51gcqy2p)
-  by Christophe Porteneuve
-
 ## Table of Content
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
+- [Table of Content](#table-of-content)
+- [Credits](#credits)
 - [Prerequisites](#prerequisites)
 	- [Git configuration](#git-configuration)
 - [Background and Assumptions](#background-and-assumptions)
@@ -31,8 +26,22 @@ system or just contributing to a specific part).
 	- [Grabbing container updates](#grabbing-container-updates)
 	- [Updating a submodule in-place in the container](#updating-a-submodule-in-place-in-the-container)
 - [Dockerizing everything](#dockerizing-everything)
+	- [Quick start](#quick-start)
+	- [How it's done](#how-its-done)
+		- [arangodb](#arangodb)
+		- [server](#server)
+		- [web](#web)
+		- [nginx - reverse proxy and router](#nginx-reverse-proxy-and-router)
+- [Conclusion](#conclusion)
 
 <!-- /TOC -->
+
+## Credits
+
+* The original idea by Amine Mouafik [Efficient development workflow using Git submodules and Docker Compose](https://www.airpair.com/docker/posts/efficiant-development-workfow-using-git-submodules-and-docker-compose).
+* The excellent [git documentation](https://git-scm.com/doc)
+* [Mastering Git submodules](https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407#.s51gcqy2p)
+  by Christophe Porteneuve
 
 ## Prerequisites
 
@@ -591,8 +600,11 @@ $ git push --recurse-submodules=on-demand
 > More documentation of the design and structure of the containerization will
 > come later.
 
+### Quick start
+
 All modules are dockerized. To get started with the testing, clone the
-development repo and do this from the development repo root:
+development repo as described in '[Setting up the development environment as a developer](#setting-up-the-development-environment-as-a-developer)'
+and do this from the development repo root:
 
 ```shell
 $ cd server && npm install
@@ -605,5 +617,160 @@ repo root:
 $ docker-compose down
 ```
 
+### How it's done
 
-> TO BE CONTINUED
+Docker containers enable us to automate the deployment of applications or
+application modules inside lightweight containers. No more spending hours or
+days making sure all dependencies with correct versions are downloaded and
+installed. No more problems due to environment pollution on the test systems.
+Simply pull the right container, deploy it and run it.
+
+With this docker-compose comes to play as a simple but straightforward
+tool to define and run multi-container applications, providing basic
+orchestration capabilities.
+
+There are certainly many more sophisticated tools and platforms, such as Apache
+Mesos, Kubernetes, etc... to manage complex environments and orchestrate large
+clusters of multi-container applications. But we are here for the main purpose
+of efficiently setting up a development environment and supporting our
+multi-module development workflow with the minimal upfront requirements.
+
+As we will see, docker and docker-compose will allow us to build everything we
+need and get supported our workflow with simply a docker-compose descriptor
+file. That in itself is amazing!
+
+Let's recall the overall application architecture:
+* We mainly provide a set of REST APIs served out of our node.js/express
+  application server, located in the `server` module.
+* Our `server` modules relies on a backend database, implemented using ArangoDB.
+  The choice of ArangoDB is motivated by its versatility to support document
+  storage and graph databases. Any other alternate database that satisfies the
+  need may be used, and a docker container would most likely be available of
+  docker hub. The scripts and optional Foxx microservices files for ArangoDB are
+  hosted in our `arango` module.
+* We also provide a nice web site for our app, served by nginx our of the `web`
+  module. The web site being fully static or using dynamic pages would not
+  impact at all our deployment architecture. We simply would need to augment
+  the container with the required additional capabilities.
+* Finally, to protect our application modules and enable us to leverage all the
+  goodies that can come with `nginx`, we front all our external interfaces with
+  a reverse proxy. There is no special module in our application repo dor that.
+  The whole thing can be implemented within the nginx container definition.
+  Should we need to add some artificats in the future to support enhancements
+  to our nginx reverse proxy, such as certificates and keys for TLS, we simply
+  need to create a new application module and add it to our development repo.
+
+The required containers and their resources are summarized in the table below:
+
+| Container | Main function                                  | Baseline Docker Container                                                                              | Volumes                                                                                         | Ports     |
+|-----------|------------------------------------------------|--------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------|-----------|
+| arangodb  | backend document and graph database            | Official container image from docker hub arangodb/arangodb                                             | data: docker volume apps: optional Foxx microservices source code, embedded in arango submodule | 8529:8529 |
+| server    | REST API and business logic application server | Official stable release of node.js from docker hub node:argon                                          | app: mapped from the server submodule                                                           | 3000:3000 |
+| web       | public web site for the application            | Alpine nginx container image from docker hub evild/alpine-nginx                                        | site: mapped from the web submodule config: mapped from the web submodule                       | 8000:80   |
+| nginx     | reverse proxy                                  | The amazing auto-configured reverse proxy container based on nginx from docker hub jwilder/nginx-proxy | internal mapping needed for the docker.sock, not related to our application modules             | 80:80     |
+
+> NOTE: docker-compose.yml uses version 2 configuration format to get access to
+> the volume declarations and to get a cleaner overall descriptor.
+
+#### arangodb
+
+A local volume created and managed by docker is used for the database storage,
+while we use our arango submodule to provide ArangoDB with the application
+source code for Foxx microservices.
+
+```yml
+arangodb:
+  image: arangodb/arangodb
+  environment:
+    - ARANGO_NO_AUTH=1
+  ports:
+    - "8529:8529"
+  volumes:
+    - arangodb-data:/var/lib/arangodb3
+    - ./arango/foxx/:/var/lib/arangodb-apps3
+```
+
+#### server
+
+We need to link this container to the `arangodb` container for our application
+server to be able to communicate with the database via the exposed ports.
+
+```yml
+server:
+  image: node:argon
+  volumes:
+    - ./server/:/server/
+  working_dir: /server/
+  command: npm start
+  environment:
+    - VIRTUAL_HOST=api.example.lo
+    - VIRTUAL_PORT=3000
+  ports:
+    - "3000:3000"
+  links:
+    - arangodb
+```
+
+#### web
+
+We don't want to override the entire nginx configuration filesystem in the
+container, so we only mount volumes for the `nginx.conf` file and for the
+`conf.d/` sub-folder.
+
+```yml
+web:
+  image: evild/alpine-nginx
+  volumes:
+    - ./web/public/:/usr/share/nginx/html/:ro
+    - ./web/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./web/nginx/conf.d/:/etc/nginx/conf.d/:ro
+  environment:
+    - VIRTUAL_HOST=www.example.lo
+    - VIRTUAL_PORT=80
+  ports:
+    - "8000:80"
+```
+
+#### nginx - reverse proxy and router
+
+J. Wilder's nginx reverse proxy container provides an easy and straightforward
+method to automatically and dynamically configure all our containers for
+reverse proxying by nginx. To mark a container for configuration inside nginx,
+you simply add the environment variables `VIRTUAL_HOST` and `VIRTUAL_PORT` to
+its container definition.
+
+For our application, we have the following needs:
+* Everything coming to `app.example.lo` should be served by the node.js/express
+  inside the `server` container.
+* Everything coming to `www.example.lo` should be served by the nginx web server
+  inside the `web` container.
+
+> The virtual hosts are locally defined in the machine's /etc/hosts file for
+> the purpose of our development workflow. In production they can be replaced
+> with the real hosts/domain.
+
+J. Wilder's automated proxy container can do a lot more and can be extensiely
+customized to support complex configurations of nginx, TLS, multiple virtual
+hosts, etc... For reference, the full documentation is available at
+https://github.com/jwilder/nginx-proxy.
+
+```yml
+nginx:
+  image: jwilder/nginx-proxy
+  volumes:
+    - /var/run/docker.sock:/tmp/docker.sock
+  ports:
+    - "80:80"
+```
+
+## Conclusion
+
+With a fully working developer workflow, supported by git and docker, we can
+get a full developer team or a single developer started in a matter of minutes
+rather than days. Moreover, with the flexibility that is offered by docker
+and the power of git submodules, we can easily adapt the application sturctures
+to add more modules.
+
+Microservices architectures, coupled with containers and container composition
+are powerful software architecture tools to build powerful systems while
+significantly reducing the complexity overhead on the development workflows.
