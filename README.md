@@ -595,11 +595,6 @@ $ git push --recurse-submodules=on-demand
 
 ## Dockerizing everything
 
-> Following are preliminary instructions to get started with docker containers
-> as setup in the docker-compose.yml descriptor.
-> More documentation of the design and structure of the containerization will
-> come later.
-
 ### Quick start
 
 All modules are dockerized. To get started with the testing, clone the
