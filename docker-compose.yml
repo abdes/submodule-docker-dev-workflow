@@ -1,0 +1,52 @@
+version: '2'
+
+services:
+  arangodb:
+    image: arangodb/arangodb
+    environment:
+      - ARANGO_NO_AUTH=1
+    ports:
+      - "8529:8529"
+    volumes:
+      - arangodb-data:/var/lib/arangodb3
+      - arangodb-apps:/var/lib/arangodb-apps3
+
+  server:
+    image: node:argon
+    volumes:
+      - ./server/:/server/
+    working_dir: /server/
+    command: npm start
+    environment:
+      - VIRTUAL_HOST=api.tango.com
+      - VIRTUAL_PORT=3000
+    ports:
+      - "3000:3000"
+    links:
+      - arangodb
+
+  web:
+    image: evild/alpine-nginx
+    volumes:
+      - ./web/public/:/usr/share/nginx/html/:ro
+      - ./web/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./web/nginx/conf.d/:/etc/nginx/conf.d/:ro
+    environment:
+      - VIRTUAL_HOST=www.tango.com
+      - VIRTUAL_PORT=80
+    ports:
+      - "8000:80"
+
+  nginx:
+    image: jwilder/nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock
+    ports:
+      - "80:80"
+
+volumes:
+  arangodb-data:
+    driver: local
+
+  arangodb-apps:
+    driver: local
