@@ -4,6 +4,3 @@
 [submodule "server"]
 	path = server
 	url = git@localhost:/var/git/example/server.git
-[submodule "web"]
-	path = web
-	url = git@localhost:/var/git/example/web.git
