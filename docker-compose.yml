@@ -18,7 +18,7 @@ services:
     working_dir: /server/
     command: npm start
     environment:
-      - VIRTUAL_HOST=api.tango.com
+      - VIRTUAL_HOST=api.example.lo
       - VIRTUAL_PORT=3000
     ports:
       - "3000:3000"
@@ -32,7 +32,7 @@ services:
       - ./web/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./web/nginx/conf.d/:/etc/nginx/conf.d/:ro
     environment:
-      - VIRTUAL_HOST=www.tango.com
+      - VIRTUAL_HOST=www.example.lo
       - VIRTUAL_PORT=80
     ports:
       - "8000:80"
