@@ -1,9 +1,18 @@
 # Development workflow using _git submodules_ and _docker_
 
 This setup aims at simplifying the development workflow and increasing its
-efficiency no matter whether the developer is remote, inexperienced, familiar
-with the full system or just contributing to a specific part.
+efficiency no matter whether the developer is (remote, together with the dev
+team), and the experience she/he has with the system(familiar with the full
+system or just contributing to a specific part).
 
+## Credits
+
+* The original idea by Amine Mouafik [Efficient development workflow using Git submodules and Docker Compose](https://www.airpair.com/docker/posts/efficiant-development-workfow-using-git-submodules-and-docker-compose).
+* The excellent [git documentation](https://git-scm.com/doc)
+* [Mastering Git submodules](https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407#.s51gcqy2p)
+  by Christophe Porteneuve
+
+## Table of Content
 <!-- TOC depthFrom:2 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
 
 - [Prerequisites](#prerequisites)
@@ -576,3 +585,5 @@ $ git push --recurse-submodules=on-demand
 ```
 
 ## Dockerizing everything
+
+TO BE CONTINUED
