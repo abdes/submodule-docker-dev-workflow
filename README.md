@@ -603,14 +603,19 @@ and do this from the development repo root:
 
 ```shell
 $ cd server && npm install
-$ docker-compose up
+$ docker-compose -p example up
 ```
 
 To tear down the docker containers, simply do this from the development
 repo root:
 ```shell
-$ docker-compose down
+$ docker-compose -p example down
 ```
+
+> It is important to use `docker-compose -p <project-name>` to make sure
+> docker-compose does not prepend the current directory name to all containers
+> it creates. We want those container names to be predictable as they are used
+> in the tools within the submodules.
 
 ### How it's done
 
