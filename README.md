@@ -682,7 +682,9 @@ arangodb:
     - "8529:8529"
   volumes:
     - arangodb-data:/var/lib/arangodb3/
-    - ./arango/foxx/:/var/lib/arangodb3-apps/
+    - arangodb-apps:/var/lib/arangodb3-apps/
+    - ./arango/foxx:/var/lib/example-apps/:ro
+    - ./arango/scripts/:/var/lib/arangodb3-scripts/:ro
 ```
 
 #### server
