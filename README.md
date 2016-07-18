@@ -602,7 +602,8 @@ development repo as described in '[Setting up the development environment as a d
 and do this from the development repo root:
 
 ```shell
-$ cd server && npm install
+$ cd server && npm install && npm run build && cd ..
+$ cd arango && npm install && cd ..
 $ docker-compose -p example up
 ```
 
