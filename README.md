@@ -106,11 +106,11 @@ that all submodules commits are pushed when pushing the main project.
 
 ## Background and Assumptions
 
-The examplelication we will be working on is composed of the following modules:
+The example application we will be working on is composed of the following modules:
 * arango: the backend database, using [ArangoDB](https://www.arangodb.com)
-* server: server examplelication, using [node.js](https://nodejs.org/en/), for the
+* server: server example application, using [node.js](https://nodejs.org/en/), for the
   implementation of the REST API
-* web: the public web site for the examplelication, served through
+* web: the public web site for the example application, served through
   [nginx](https://www.nginx.com)
 
 The domain name 'example.local' will be used locally for the development environment
